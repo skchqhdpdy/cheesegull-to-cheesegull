@@ -3,6 +3,7 @@ import pymysql
 import config
 import sys
 from datetime import datetime
+import os
 
 from lets_common_log import logUtils as log
 
@@ -15,16 +16,17 @@ if conf.default:
 
 if not conf.checkConfig():
     log.error("config ERROR remove config.ini")
+    os.remove("config.ini")
     sys.exit()
 
 host = conf.config["db"]["host"]
 user = conf.config["db"]["username"]
 password = conf.config["db"]["password"]
-db = conf.config["db"]["database"]
+table = conf.config["db"]["database"]
 
 OSUAPIKEY = conf.config["osu"]["APIKEY"]
 
-db = pymysql.connect(host=host, user=user, password=password, db=db, charset="utf8")
+db = pymysql.connect(host=host, user=user, password=password, db=table, charset="utf8")
 cur = db.cursor()
 
 url = ["https://api.chimu.moe/cheesegull/s/", "https://storage.ripple.moe/api/s/", "https://osu.direct/api/s/", "https://redstar.moe/api/v1/get_beatmaps?s="]
@@ -44,14 +46,14 @@ def insert_cheesegullDB():
     try:
         def sql_insert_sets():
             #cheesegull.sets table
-            cur.execute("INSERT INTO `gull`.`sets` (`id`, `ranked_status`, `approved_date`, `last_update`, `last_checked`, `artist`, `title`, `creator`, `source`, `tags`, `has_video`, `genre`, `language`, `favourites`, `set_modes`)\
+            cur.execute(f"INSERT INTO {table}.`sets` (`id`, `ranked_status`, `approved_date`, `last_update`, `last_checked`, `artist`, `title`, `creator`, `source`, `tags`, `has_video`, `genre`, `language`, `favourites`, `set_modes`)\
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",\
                         (list['SetId'], list['RankedStatus'], list['ApprovedDate'], list['LastUpdate'], list['LastChecked'], list['Artist'], list['Title'], list['Creator'], list['Source'], list['Tags'], list['HasVideo'], list['Genre'], list['Language'], list['Favourites'], list['set_modes']))
             db.commit()
         sql_insert_sets()
     except:
-        log.warning(f"cheesegull.sets delete & insert | bsid = {list['SetId']}")
-        cur.execute(f"DELETE FROM gull.sets WHERE id = {list['SetId']}")
+        log.warning(f"{table}.sets delete & insert | bsid = {list['SetId']}")
+        cur.execute(f"DELETE FROM {table}.sets WHERE id = {list['SetId']}")
         db.commit()
         sql_insert_sets()
 
@@ -60,12 +62,12 @@ def insert_cheesegullDB():
         for i in list['ChildrenBeatmaps']:
             log.debug(i["BeatmapID"])
             log.info(i["DiffName"])
-            cur.execute("INSERT INTO `gull`.`beatmaps` (`id`, `parent_set_id`, `diff_name`, `file_md5`, `mode`, `bpm`, `ar`, `od`, `cs`, `hp`, `total_length`, `hit_length`, `playcount`, `passcount`, `max_combo`, `difficulty_rating`)\
+            cur.execute(f"INSERT INTO {table}.`beatmaps` (`id`, `parent_set_id`, `diff_name`, `file_md5`, `mode`, `bpm`, `ar`, `od`, `cs`, `hp`, `total_length`, `hit_length`, `playcount`, `passcount`, `max_combo`, `difficulty_rating`)\
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",\
                     (i['BeatmapID'], i['ParentSetID'], i['DiffName'], i["FileMD5"], i['Mode'], i['BPM'], i['AR'], i['OD'], i['CS'], i['HP'], i['TotalLength'], i['HitLength'], i['Playcount'], i['Passcount'], i['MaxCombo'], i['DifficultyRating']))
             db.commit()
     except:
-        log.error(f"cheesegull.beatmaps skipped! | bid = {i['BeatmapID']}")
+        log.error(f"{table}.beatmaps skipped! | bid = {i['BeatmapID']}")
     db.close()
 
 
@@ -184,7 +186,7 @@ def rq_cheesegull():
     try:
         Dict["HasVideo"] = r["HasVideo"]
     except:
-        Dict["HasVideo"] = -1
+        Dict["HasVideo"] = 0
 
     try:
         Dict["Genre"] = r["Genre"]
