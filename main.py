@@ -90,54 +90,84 @@ def get_redstarAPI_ChildrenBeatmaps(bsid):
             bName = txt[:txt.lower().find(' cs')]
             for i in r2:
                 if i["version"] == bName:
-                    return {"CS": 0, "HP": i["diff_drain"], "playcount": i["playcount"], "passcount": i["passcount"]}
+                    return {"CS": 0, "HP": i["diff_drain"], "Playcount": i["playcount"], "Passcount": i["passcount"]}
 
         if " ar" in txt.lower() and int(bid) < 0:
             bName = txt[:txt.lower().find(' ar')]
             for i in r2:
                 if i["version"] == bName:
-                    return {"CS": i["diff_size"], "HP": i["diff_drain"], "AR": 0, "playcount": i["playcount"], "passcount": i["passcount"]}
+                    return {"CS": i["diff_size"], "HP": i["diff_drain"], "AR": 0, "Playcount": i["playcount"], "Passcount": i["passcount"]}
 
         if " hp" in txt.lower() and int(bid) < 0:
             bName = txt[:txt.lower().find(' hp')]
             for i in r2:
                 if i["version"] == bName:
-                    return {"CS": i["diff_size"], "HP": 0, "playcount": i["playcount"], "Passcount": i["passcount"]}
+                    return {"CS": i["diff_size"], "HP": 0, "Playcount": i["playcount"], "Passcount": i["passcount"]}
 
         if " od" in txt.lower() and int(bid) < 0:
             bName = txt[:txt.lower().find(' od')]
             for i in r2:
                 if i["version"] == bName:
-                    return {"CS": i["diff_size"], "HP": i["diff_drain"], "OD": 0, "playcount": i["playcount"], "Passcount": i["passcount"]}
+                    return {"CS": i["diff_size"], "HP": i["diff_drain"], "OD": 0, "Playcount": i["playcount"], "Passcount": i["passcount"]}
                 
         for i in r2:
             if i["version"] == txt:
-                return {"CS": i["diff_size"], "HP": i["diff_drain"], "playcount": i["playcount"], "passcount": i["passcount"]}
+                return {"CS": i["diff_size"], "HP": i["diff_drain"], "AR": i["diff_approach"], "OD": i["diff_overall"], "Playcount": i["playcount"], "Passcount": i["passcount"], "bid":i["beatmap_id"]}
+
+        if int(bid) < 0:
+            realBid = int(bid.replace("-", ""))
+            for i in r2:
+                if int(i["beatmap_id"]) == realBid:
+                    return {"CS": i["diff_size"], "HP": i["diff_drain"], "AR": i["diff_approach"], "OD": i["diff_overall"], "Playcount": i["playcount"], "Passcount": i["passcount"], "bid": i["beatmap_id"]}
+
+        for i in r2:
+            #RedstarAPI
+            #48498 masterpiece 예외처리 시발련아
+            if int(bid) == -14:
+                if i["AR"] == 8:
+                   return {"CS": i["diff_size"], "HP": i["diff_drain"], "Playcount": i["playcount"], "Passcount": i["passcount"]}
+            #RedstarAPI
+            #10000000 Black + White (TV Size) 예외처리 시발련아
+            elif int(bid) == -19:
+                return {"CS": -1, "HP": 7, "Playcount": -1, "Passcount": -1}
+
+            log.debug(f"bid = {bid}")
+            bancho = requests.get(f"https://osu.ppy.sh/api/get_beatmaps?k={OSUAPIKEY}&b={bid}")
+            if bancho.status_code == 200:
+                bancho = bancho.json()[0]
+                return {"CS": bancho["diff_size"], "HP": bancho["diff_drain"], "AR": bancho["diff_approach"], "OD": bancho["diff_overall"], "Playcount": bancho["playcount"], "Passcount": bancho["passcount"], "bid": bancho["beatmap_id"]}
+
 
     def c(txt, bid):
         if " cs" in txt.lower() and int(bid) < 0:
             bName = txt[:txt.lower().find(' cs')]
             for i in r3:
                 if i["DiffName"] == bName:
-                    return {"CS": 0, "HP": i["HP"], "Playcount": i["Playcount"], "Passcount": i["Passcount"]}
+                    return {"CS": 0, "HP": i["HP"], "Playcount": i["Playcount"], "Passcount": i["Passcount"], "bid": i["BeatmapID"]}
 
         if " ar" in txt.lower() and int(bid) < 0:
             bName = txt[:txt.lower().find(' ar')]
             for i in r3:
                 if i["DiffName"] == bName:
-                    return {"CS": i["CS"], "HP": i["HP"], "AR": 0, "Playcount": i["Playcount"], "Passcount": i["Passcount"]}
+                    return {"CS": i["CS"], "HP": i["HP"], "AR": 0, "Playcount": i["Playcount"], "Passcount": i["Passcount"], "bid": i["BeatmapID"]}
 
         if " hp" in txt.lower() and int(bid) < 0:
             bName = txt[:txt.lower().find(' hp')]
             for i in r3:
                 if i["DiffName"] == bName:
-                    return {"CS": i["CS"], "HP": 0, "Playcount": i["Playcount"], "Passcount": i["Passcount"]}
+                    return {"CS": i["CS"], "HP": 0, "Playcount": i["Playcount"], "Passcount": i["Passcount"], "bid": i["BeatmapID"]}
 
         if " od" in txt.lower() and int(bid) < 0:
             bName = txt[:txt.lower().find(' od')]
             for i in r3:
                 if i["DiffName"] == bName:
-                    return {"CS": i["CS"], "HP": i["HP"], "OD": 0, "Playcount": i["Playcount"], "Passcount": i["Passcount"]}
+                    return {"CS": i["CS"], "HP": i["HP"], "OD": 0, "Playcount": i["Playcount"], "Passcount": i["Passcount"], "bid": i["BeatmapID"]}
+
+        if int(bid) < 0:
+            realBid = int(bid.replace("-", ""))
+            for i in r3:
+                if i["BeatmapID"] == realBid:
+                    return {"CS": i["CS"], "HP": i["HP"], "AR": i["AR"], "OD": i["OD"], "Playcount": i["Playcount"], "Passcount": i["Passcount"], "bid": i["BeatmapID"]}
 
         for i in r3:
             #RedstarAPI
@@ -150,16 +180,21 @@ def get_redstarAPI_ChildrenBeatmaps(bsid):
             elif int(bid) == -19:
                 return {"CS": -1, "HP": 7, "Playcount": -1, "Passcount": -1}
 
-            elif i["DiffName"] == txt:
-                return {"CS": i["CS"], "HP": i["HP"], "Playcount": i["Playcount"], "Passcount": i["Passcount"]}
+            chimu = requests.get(f"https://api.chimu.moe/cheesegull/b/{bid}")
+            if chimu.status_code == 200:
+                chimu = chimu.json()
+                return {"CS": chimu["CS"], "HP": chimu["HP"], "AR": chimu["AR"], "OD": chimu["OD"], "Playcount": chimu["Playcount"], "Passcount": chimu["Passcount"], "bid": chimu["BeatmapID"]}
             
 
     Dict = []
 
     for i in r:
         if (len(r) != len(r2)) or (len(r) != len(r3)):
+            log.warning(f"API들의 len이 다름")
             bancho = b(i["version"], i["beatmap_id"])
             chimu = c(i["version"], i["beatmap_id"])
+        else:
+            log.debug("API 개수 맞음")
 
         Dict2 = {}
         Dict2["ParentSetID"] = i["beatmapset_id"]
@@ -169,14 +204,14 @@ def get_redstarAPI_ChildrenBeatmaps(bsid):
         Dict2["DiffName"] = i["version"]
         Dict2["FileMD5"] = i["file_md5"]
         try:
-            Dict2["CS"] = bancho["diff_size"]
+            Dict2["CS"] = bancho["CS"]
         except:
             log.warning("child | CS | 2차 Bancho, 3차 chimu 까지옴")
             Dict2["CS"] = chimu["CS"]
 
         Dict2["AR"] = i["diff_approach"]
         try:
-            Dict2["HP"] = bancho["diff_drain"]
+            Dict2["HP"] = bancho["HP"]
         except:
             log.warning("child | HP | 2차 Bancho, 3차 chimu 까지옴")
             Dict2["HP"] = chimu["HP"]
@@ -185,13 +220,13 @@ def get_redstarAPI_ChildrenBeatmaps(bsid):
         Dict2["Mode"] = i["mode"]
         Dict2["BPM"] = i["bpm"]
         try:
-            Dict2["Playcount"] = bancho["playcount"]
+            Dict2["Playcount"] = bancho["Playcount"]
         except:
             log.warning("child | Playcount | 2차 Bancho, 3차 chimu 까지옴")
             Dict2["Playcount"] = chimu["Playcount"]
 
         try:
-            Dict2["Passcount"] = bancho["passcount"]
+            Dict2["Passcount"] = bancho["Passcount"]
         except:
             log.warning("child | Passcount | 2차 Bancho, 3차 chimu 까지옴")
             Dict2["Passcount"] = chimu["Passcount"]
@@ -201,7 +236,7 @@ def get_redstarAPI_ChildrenBeatmaps(bsid):
 
         Dict2["RankedStatus"] = i["approved"]
         Dict2["ApprovedDate"] = i["approved_date"]
-        print("")
+
         Dict.append(Dict2)
     return Dict
 
