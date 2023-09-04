@@ -1,0 +1,7 @@
+bid -19
+File ".\main.py", line 169, in c
+    if i["BeatmapID"] == realBid:
+TypeError: byte indices must be integers or slices, not str
+
+bid -3917272
+API 개수 같아서 변수 할당 안대서 에러남
